@@ -18,7 +18,7 @@ PUBLISH_CHOICES = [
         ('private', 'Private'),
     ]
 
-class PostModelQuerySet(models.query.QuerySet):
+class PostQuerySet(models.query.QuerySet):
     def active(self):
         return self.filter(active=True)
 
@@ -26,12 +26,12 @@ class PostModelQuerySet(models.query.QuerySet):
         return self.filter(title__icontains=value)
 
 
-class PostModelManager(models.Manager):
+class PostManager(models.Manager):
     def get_queryset(self):
-        return PostModelQuerySet(self.model, using=self._db)
+        return PostQuerySet(self.model, using=self._db)
 
     def all(self, *args, **kwargs):
-        #qs = super(PostModelManager, self).all(*args, **kwargs).active() #.filter(active=True)
+        #qs = super(PostManager, self).all(*args, **kwargs).active() #.filter(active=True)
         #print(qs)
         qs = self.get_queryset().active()
         return qs
@@ -44,7 +44,7 @@ class PostModelManager(models.Manager):
         #final_qs = (qs_time_1 | qs_time_2).distinct()
         return qs_time_2
 
-class PostModel(models.Model):
+class Post(models.Model):
     id              = models.BigAutoField(primary_key=True)
     active          = models.BooleanField(default=True) #empty in the database
     title           = models.CharField(
@@ -65,14 +65,14 @@ class PostModel(models.Model):
     updated         = models.DateTimeField(auto_now=True)
     timestamp       = models.DateTimeField(auto_now_add=True)
 
-    objects = PostModelManager()
-    other = PostModelManager()
-    #save = PostModelManager()
+    objects = PostManager()
+    other = PostManager()
+    #save = PostManager()
 
     def save(self, *args, **kwargs):
         # if not self.slug and self.title:
         #     self.slug = slugify(self.title)
-        super(PostModel, self).save(*args, **kwargs)
+        super(Post, self).save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'Post'
@@ -101,16 +101,16 @@ class PostModel(models.Model):
 
 
 
-def blog_post_model_pre_save_receiver(sender, instance, *args, **kwargs):
+def blog_post_pre_save_receiver(sender, instance, *args, **kwargs):
     print("before save")
     if not instance.slug and instance.title:
         instance.slug = slugify(instance.title) 
 
-pre_save.connect(blog_post_model_pre_save_receiver, sender=PostModel)
+pre_save.connect(blog_post_pre_save_receiver, sender=Post)
 
 
 
-def blog_post_model_post_save_receiver(sender, instance, created, *args, **kwargs):
+def blog_post_post_save_receiver(sender, instance, created, *args, **kwargs):
     print("after save")
     print(created)
     if created:
@@ -118,6 +118,6 @@ def blog_post_model_post_save_receiver(sender, instance, created, *args, **kwarg
             instance.slug = slugify(instance.title)
             instance.save()
 
-post_save.connect(blog_post_model_post_save_receiver, sender=PostModel)
+post_save.connect(blog_post_post_save_receiver, sender=Post)
 
 

@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect, Http404
-from .models import PostModel
+from .models import Post
 
 
 # Create your views here.
@@ -23,21 +23,24 @@ def home_view(request):
 def redirect_view(request):
     return HttpResponseRedirect('/blog/some/path/') # complete url path
 
+
+
+
 def post_detail_view(request, **kwargs):
 
     # try: 
-    #     obj = PostModel.objects.get(id=1)
+    #     obj = Post.objects.get(id=1)
     # except:
     #     raise Http404
 
-    # qs = PostModel.objects.filter(id=1)
+    # qs = Post.objects.filter(id=1)
     # obj = None
     # if not qs.exists() and qs.count() != 1:
     #     raise Http404
     # else:
     #     obj = qs.first()
 
-    obj = get_object_or_404(PostModel, id=kwargs.get('pk'))
+    obj = get_object_or_404(Post, id=kwargs.get('pk'))
     context = {
         'object': obj
     }
@@ -46,7 +49,7 @@ def post_detail_view(request, **kwargs):
 
 @login_required(login_url='/login/')
 def post_list_view(request):
-    qs = PostModel.objects.all()
+    qs = Post.objects.all()
     print(qs)
     # return HttpResponse('this is the queryset')
     context = {
