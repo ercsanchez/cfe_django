@@ -1,7 +1,11 @@
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect, Http404
+
 from .models import Post
+from .forms import PostForm
+
 
 
 # Create your views here.
@@ -23,8 +27,32 @@ def home_view(request):
 def redirect_view(request):
     return HttpResponseRedirect('/blog/some/path/') # complete url path
 
+def post_create_view(request):
+    # if request.method == 'POST':
+    #     print('request.POST:', request.POST)
+    #     form = PostForm(request.POST)
+    #     if form.is_valid():
+    #         form.save(commit=False)
+    #         print('form.cleaned_data:', form.cleaned_data)
 
+    form = PostForm(request.POST or None)
+    template = 'blog/create_view.html'
+    context = {
+        'form': form
+    }
 
+    if form.is_valid():
+        obj = form.save(commit=False) # only req'd. if using ModelForm
+        print('obj.title:', obj.title)
+        obj.save()
+        messages.success(request, 'Created a New Blog Post')
+        # if you want to display a new form after creating a new post
+        # context = {
+        #     'form': PostForm()
+        # }
+        return HttpResponseRedirect(f'/blog/{obj.id}/')
+
+    return render(request, template, context)
 
 def post_detail_view(request, **kwargs):
 
