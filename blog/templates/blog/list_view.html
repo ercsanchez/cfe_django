@@ -1,5 +1,13 @@
 <h1>Blog Posts</h1>
 
+{% if messages %}
+<ul>
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ messages.tags }}" {% endif %}> {{ message }} </li>
+    {% endfor %}
+</ul>
+{% endif %}
+
 <p>{{object_list}}</p>
 {% for object in object_list %}
 <li>

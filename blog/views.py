@@ -16,6 +16,7 @@ from .forms import PostForm
 #     print(request.is_ajax())
 #     return HttpResponse('<h1>This is the Blog Home Page</h1>')
 
+
 def home_view(request):
     response = HttpResponse(content_type='application/json')
     # response = HttpResponse(content_type='text/html')
@@ -24,9 +25,12 @@ def home_view(request):
     response.status_code = 200
     return response
 
+
 def redirect_view(request):
     return HttpResponseRedirect('/blog/some/path/') # complete url path
 
+
+@login_required
 def post_create_view(request):
     # if request.method == 'POST':
     #     print('request.POST:', request.POST)
@@ -54,7 +58,38 @@ def post_create_view(request):
 
     return render(request, template, context)
 
-def post_detail_view(request, **kwargs):
+
+@login_required
+def post_update_view(request, **kwargs):
+    obj = get_object_or_404(Post, id=kwargs.get('pk'))
+    template = 'blog/update_view.html'
+    form = PostForm(request.POST or None, instance=obj)
+    context = {
+        # 'object': obj,
+        'form': form,
+    }
+
+    if form.is_valid():
+        form.save()
+        messages.success(request, 'Updated the Blog Post')
+        return HttpResponseRedirect(f'/blog/{obj.id}/')
+
+    return render(request, template, context)
+
+
+def post_delete_view(request, pk=None):
+    obj = get_object_or_404(Post, id=pk)
+    template = 'blog/delete_view.html'
+    if request.method == 'POST':
+        obj.delete()
+        messages.success(request, 'Post deleted')
+        return HttpResponseRedirect('/blog/posts/')
+    context = {
+        'object': obj,
+    }
+    return render(request, template, context)
+
+def post_detail_view(request, pk=None):
 
     # try: 
     #     obj = Post.objects.get(id=1)
@@ -68,12 +103,13 @@ def post_detail_view(request, **kwargs):
     # else:
     #     obj = qs.first()
 
-    obj = get_object_or_404(Post, id=kwargs.get('pk'))
+    obj = get_object_or_404(Post, id=pk)
     context = {
         'object': obj
     }
     template = 'blog/detail_view.html'
     return render(request, template, context)
+
 
 @login_required(login_url='/login/')
 def post_list_view(request):
