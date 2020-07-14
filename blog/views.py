@@ -80,6 +80,7 @@ def post_update_view(request, **kwargs):
 def post_delete_view(request, pk=None):
     obj = get_object_or_404(Post, id=pk)
     template = 'blog/delete_view.html'
+
     if request.method == 'POST':
         obj.delete()
         messages.success(request, 'Post deleted')
@@ -127,4 +128,45 @@ def post_list_view(request):
     else:
         template = 'blog/list_view_public.html'
         raise Http404
+    return render(request, template, context)
+
+
+# combining all crud views
+def post_robust_view(request, pk=None):
+    obj = None
+    context = {}
+    success_message = 'Created a new blog post'
+    template = 'blog/detail_view.html'
+
+    if pk is None:
+        'obj could be created'
+        template = 'blog/create_view.html'
+
+    else:
+        'obj probably exists'
+        obj = get_object_or_404(Post, id=pk)
+        success_message = 'Updated a new blog post'
+        context['object'] = obj
+
+        if 'update' in request.get_full_path():
+            template = 'blog/update_view.html'
+
+        if 'delete' in request.get_full_path():
+            template = 'blog/delete_view.html'
+            if request.method == 'POST':
+                obj.delete()
+                messages.success(request, 'Post deleted')
+                return HttpResponseRedirect('/blog/posts/')
+
+    # if 'update' in request.get_full_path() or 'create' in request.get_full_path():
+    form = PostForm(request.POST or None, instance=obj)
+    context['form'] = form
+    if form.is_valid():
+        obj = form.save(commit=False)
+        obj.save()
+        messages.success(request, success_message)
+        if obj is not None:
+            return HttpResponseRedirect('/blog/{obj.id}/')
+        context['form'] = PostForm()
+
     return render(request, template, context)
