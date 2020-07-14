@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db.models import Q
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 
@@ -114,8 +115,22 @@ def post_detail_view(request, pk=None):
 
 @login_required(login_url='/login/')
 def post_list_view(request):
+
     qs = Post.objects.all()
     print(qs)
+
+    # using GET params: query
+    print('request.GET:', request.GET)
+    query_param = request.GET.get('query', None)
+    print('query_param:', query_param)
+    if query_param is not None:
+        # qs = qs.filter(title__icontains=query_param)
+        qs = qs.filter(
+            Q(title__icontains=query_param) |
+            Q(content__icontains=query_param) |
+            Q(slug__icontains=query_param)
+        )
+
     # return HttpResponse('this is the queryset')
     context = {
         'object_list': qs
